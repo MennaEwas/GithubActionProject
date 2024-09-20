@@ -48,7 +48,6 @@ jobs:
       - name: Security Scanning with Bandit
         run: |
           bandit -r .
-        continue-on-error: true
 
       - name: Testing
         run: |
@@ -72,3 +71,22 @@ jobs:
           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
           docker tag python_project:latest mennaewis/python_project:latest
           docker push mennaewis/python_project:latest
+
+
+      
+
+
+
+
+
+
+
+
+
+
+
+
+      
+
+
+
