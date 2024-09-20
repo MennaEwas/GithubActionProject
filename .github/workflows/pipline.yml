@@ -1,0 +1,71 @@
+name: ci-test
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('*/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          pip install -e .
+
+      - name: Linting with flake8
+        run: |
+          flake8 .
+
+      - name: Static Type Checking with mypy
+        run: |
+          mypy .
+
+      - name: Code Formatting Check with Black
+        run: |
+          black --check .
+
+      - name: Security Scanning with Bandit
+        run: |
+          bandit -r .
+
+      - name: Testing
+        run: |
+          python -m pytest --cov=fastvector tests
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Build Docker Image
+        run: |
+          docker build -t python_project:latest .
+
+      - name: Push Docker Image to Registry
+        if: github.event_name == 'push'
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          docker tag python_project:latest mennaewis/python_project:latest
+          docker push mennaewis/python_project:latest
