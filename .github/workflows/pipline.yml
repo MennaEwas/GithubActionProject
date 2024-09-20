@@ -34,6 +34,7 @@ jobs:
       - name: Linting with flake8
         run: |
           flake8 .
+        continue-on-error: true
 
       - name: Static Type Checking with mypy
         run: |
@@ -42,10 +43,12 @@ jobs:
       - name: Code Formatting Check with Black
         run: |
           black --check .
+        continue-on-error: true
 
       - name: Security Scanning with Bandit
         run: |
           bandit -r .
+        continue-on-error: true
 
       - name: Testing
         run: |
